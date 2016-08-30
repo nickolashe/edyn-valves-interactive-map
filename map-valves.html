@@ -1,0 +1,140 @@
+<html>
+  <head>
+    <title> Waterings canceled due to rain </title>
+    <meta name="viewport" content="initial-scale=1.0">
+    <meta charset="utf-8">
+    <style>
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      #map {
+        height: 100%;
+      }
+      #legend {
+        font-family: Arial, sans-serif;
+        background: #fff;
+        padding: 10px;
+        margin: 10px;
+        border: 1px solid #000;
+      }
+      #legend h3 {
+        margin-top: 0;
+      }
+      #legend img {
+        vertical-align: middle;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+    <div id="capture"></div>
+    <script type = "text/javascript" src = "./data/valves-data.js"></script>
+    <script>
+      function initMap() {
+        map = new google.maps.Map(document.getElementById('map'), {
+          center: {lat: 38.397, lng: -98.644},
+          zoom: 5
+        });
+
+        var i = 0;
+        //var iconMap = {
+        //  'outdoors': 'A',
+        //  'indoors': 'B',
+        //  'no_metadata': 'C'
+        //};
+        var iconMap = {
+          "northWest": 'blue',
+          "west": 'yellow',
+          "southWest": 'brown',
+          //"northernRockiesAndPlains": 'paleblue',
+          "south": 'orange',
+          "ohioValley": 'purple',
+          "upperMidwest": 'red',
+          "southEast": 'pink',
+          "northEast": 'darkgreen',
+          "hawaii": 'green'
+        }
+
+        Object.keys(allValves).forEach(function (valveId) {
+          var valveData = allValves[valveId];
+          var user = valveData.user;
+          var lat = valveData.location.split(',')[0];
+          var lng = valveData.location.split(',')[1];
+          var garden_location = valveData.garden_location;
+          var garden_type = valveData.garden_type;
+          var moisture = valveData.current_moisture;
+          var count = valveData.count;
+          var percentSkipped = valveData.percentSkipped;
+          var region = valveData.region;
+
+          if (percentSkipped === 0) {
+            console.log('Valve has no skipped waterings');
+            return;
+          }
+
+          var valveLoc = {lat: Number(lat), lng: Number(lng)};
+
+          //garden_location: ${garden_location} </br>
+          //garden_type: ${garden_type} </br>
+          //current moisture: ${moisture} </br>
+          //skipped waterings: ${count} </br>
+          var infowindow = new google.maps.InfoWindow({
+            content: `<p>
+              valveId: ${valveId} </br>
+              lat: ${lat} </br>
+              lng: ${lng} </br>
+              % skipped: ${percentSkipped} </br>
+              region: ${region}
+            </p>`
+          });
+
+          var icon = [
+            './Google Maps Markers/',
+            iconMap[region],
+            '_Marker',
+            'A',
+            '.png'
+          ].join('');
+
+          var marker = new google.maps.Marker({
+            position: valveLoc,
+            map: map,
+            title: 'Waterings canceled due to rain',
+            icon: icon
+          });
+
+          marker.addListener('click', function() {
+            infowindow.open(map, marker);
+          });
+
+          i += 1;
+        });
+
+        var legend = document.getElementById('legend');
+        for (var key in iconMap) {
+          var name = key;
+          var icon = [
+            './Google Maps Markers/',
+            iconMap[key],
+            '_Marker',
+            //iconMap[key],
+            'A',
+            '.png'
+          ].join('');
+          var div = document.createElement('div');
+          div.innerHTML = '<img src="' + icon + '"> ' + name;
+          legend.appendChild(div);
+        }
+
+        map.controls[google.maps.ControlPosition.LEFT_BOTTOM].push(legend);
+
+        console.log(i + ' valves loaded');
+      }
+    </script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB3tK_bDi_h0JwR_WVDgvLPZ-KOqhWoH-o&callback=initMap"
+    async defer></script>
+    <div id="legend"><h3>Legend</h3></div>
+  </body>
+</html>
